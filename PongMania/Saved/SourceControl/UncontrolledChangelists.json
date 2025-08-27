@@ -150,7 +150,12 @@
 				"/mnt/nvme1n1p3/Repos/PongMania/PongMania/Content/__ExternalActors__/NewMap/9/RM/0F53A5EQLRS5JNU3C82R84.uasset",
 				"/mnt/nvme1n1p3/Repos/PongMania/PongMania/Content/__ExternalActors__/NewMap/D/QY/1ETCZL36T8LOULTG5FSKJ8.uasset",
 				"/mnt/nvme1n1p3/Repos/PongMania/PongMania/Content/__ExternalActors__/NewMap/5/FT/I5IPTC503UZ5480FO15FQ7.uasset",
-				"/mnt/nvme1n1p3/Repos/PongMania/PongMania/Content/NewMap.umap"
+				"/mnt/nvme1n1p3/Repos/PongMania/PongMania/Content/NewMap.umap",
+				"/mnt/nvme1n1p3/Repos/PongMania/PongMania/Content/PongMania/Worlds/Main.umap",
+				"/mnt/nvme1n1p3/Repos/PongMania/PongMania/Content/PongMania/Pong_GM.uasset",
+				"/mnt/nvme1n1p3/Repos/PongMania/PongMania/Content/PongMania/Blueprints/Pong_GM.uasset",
+				"/mnt/nvme1n1p3/Repos/PongMania/PongMania/Content/PongMania/Blueprints/BP_Player_Paddle.uasset",
+				"/mnt/nvme1n1p3/Repos/PongMania/PongMania/Content/PongMania/Blueprints/BP_Player_Paddle_Controller.uasset"
 			]
 		}
 	]
