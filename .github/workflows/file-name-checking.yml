@@ -1,0 +1,706 @@
+name: Check File Prefixes
+
+on:
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  get-changed-files:
+    runs-on: [self-hosted]  # Replace with your self-hosted runner label
+    outputs:
+      changed_files: ${{ steps.get_changed_files.outputs.changed_files }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0  # Fetch all history so we can properly diff
+
+      - name: Fetch main branch
+        run: git fetch origin main
+
+      - name: Get list of changed files
+        id: get_changed_files
+        run: |
+          CHANGED_FILES=$(git diff --name-only origin/main...$GITHUB_SHA)
+          if [ -z "$CHANGED_FILES" ]; then
+            echo "No changed files detected."
+            exit 0
+          fi
+          echo -e "\033[36m==========\033[0m"  # Light blue color
+          echo -e "36m$CHANGED_FILES"
+          echo -e "\033[36m==========\033[0m"  # Light blue color
+          echo "::set-output name=changed_files::$(echo "$CHANGED_FILES" | tr '\n' ' ')"
+        shell: bash
+
+  validate-artificial-intelligence:
+    runs-on: [self-hosted]
+    needs: get-changed-files
+    steps:
+    - name: Validate Artificial Intelligence file prefixes
+      run: |
+        echo "Validating Artificial Intelligence file prefixes..."
+        CHANGED_FILES="${{ needs.get-changed-files.outputs.changed_files }}"
+        INVALID_FILES=0
+    
+        # Define allowed prefixes for Artificial Intelligence
+        declare -a PREFIXES=("AIC_" "BT_" "BB_" "BTDecorator_" "BTService_" "BTTask" "EQS_")
+    
+        # Iterate over the changed files
+        for FILE in $CHANGED_FILES; do
+          # Check if the file is under the ArtificialIntelligence folder
+          if [[ "$FILE" == *"/ArtificialIntelligence/"* ]]; then
+            FILENAME=$(basename "$FILE")
+            PREFIX_VALID=0
+    
+            # Check if the filename starts with any of the allowed prefixes
+            for PREFIX in "${PREFIXES[@]}"; do
+              if [[ "$FILENAME" == $PREFIX* ]]; then
+                PREFIX_VALID=1
+                break
+              fi
+            done
+    
+            # If the prefix is invalid, mark the file as invalid
+            if [[ $PREFIX_VALID -eq 1 ]]; then
+              echo -e "\033[32m✔ - $FILE\033[0m"  # Green checkmark
+            else
+              echo -e "\033[31m✘ - $FILE\033[0m"  # Red cross
+              INVALID_FILES=$((INVALID_FILES+1))
+            fi
+          fi
+        done
+    
+        # If there are any invalid files, fail the action
+        if [[ $INVALID_FILES -gt 0 ]]; then
+          echo "Found $INVALID_FILES files with invalid prefixes in Artificial Intelligence."
+          exit 1
+        else
+          echo "All files in Artificial Intelligence have valid prefixes."
+        fi
+      shell: bash
+
+  validate-animations:
+    runs-on: [self-hosted]
+    needs: get-changed-files
+    steps:
+    - name: Validate Animations file prefixes
+      run: |
+        echo "Validating Animations file prefixes..."
+        CHANGED_FILES="${{ needs.get-changed-files.outputs.changed_files }}"
+        INVALID_FILES=0
+    
+        # Define allowed prefixes for Animations
+        declare -a PREFIXES=("AO_" "ABP_" "AC_" "AM_" "A_" "BS_" "LS_" "MT_" "PFB_" "Rig_" "SKEL_")
+    
+        for FILE in $CHANGED_FILES; do
+          if [[ -f "$FILE" && "$FILE" == */Animations/* ]]; then
+            FILENAME=$(basename "$FILE")
+            PREFIX_VALID=0
+    
+            # Check if filename starts with any of the allowed prefixes
+            for PREFIX in "${PREFIXES[@]}"; do
+              if [[ "$FILENAME" == $PREFIX* ]]; then
+                PREFIX_VALID=1
+                break
+              fi
+            done
+    
+            # Validate: If prefix is valid
+            if [[ $PREFIX_VALID -eq 1 ]]; then
+              echo -e "\033[32m✔ - $FILE\033[0m"  # Green checkmark
+            else
+              echo -e "\033[31m✘ - $FILE\033[0m"  # Red cross
+              INVALID_FILES=$((INVALID_FILES+1))
+            fi
+          fi
+        done
+    
+        if [[ $INVALID_FILES -gt 0 ]]; then
+          echo "Found $INVALID_FILES files with invalid prefixes in Animations."
+          exit 1
+        else
+          echo "All files in Animations have valid prefixes."
+        fi
+      shell: bash
+
+  validate-meshes:
+    runs-on: [self-hosted]
+    needs: get-changed-files
+    steps:
+    - name: Validate Meshes file prefixes
+      run: |
+        echo "Validating Meshes file prefixes..."
+        CHANGED_FILES="${{ needs.get-changed-files.outputs.changed_files }}"
+        INVALID_FILES=0
+    
+        # Define allowed prefixes for Meshes
+        declare -a PREFIXES=("SK_" "S_")
+    
+        for FILE in $CHANGED_FILES; do
+          if [[ -f "$FILE" && "$FILE" == */Meshes/* ]]; then
+            FILENAME=$(basename "$FILE")
+            PREFIX_VALID=0
+    
+            # Check if filename starts with any of the allowed prefixes
+            for PREFIX in "${PREFIXES[@]}"; do
+              if [[ "$FILENAME" == $PREFIX* ]]; then
+                PREFIX_VALID=1
+                break
+              fi
+            done
+    
+            # Validate: If prefix is valid
+            if [[ $PREFIX_VALID -eq 1 ]]; then
+              echo -e "\033[32m✔ - $FILE\033[0m"  # Green checkmark
+            else
+              echo -e "\033[31m✘ - $FILE\033[0m"  # Red cross
+              INVALID_FILES=$((INVALID_FILES+1))
+            fi
+          fi
+        done
+    
+        if [[ $INVALID_FILES -gt 0 ]]; then
+          echo "Found $INVALID_FILES files with invalid prefixes in Meshes."
+          exit 1
+        else
+          echo "All files in Meshes have valid prefixes."
+        fi
+      shell: bash
+
+  validate-materials:
+    runs-on: [self-hosted]
+    needs: get-changed-files
+    steps:
+    - name: Validate Materials file prefixes and optional suffix for Decals
+      run: |
+        echo "Validating Materials file prefixes and optional suffix for Decals..."
+        CHANGED_FILES="${{ needs.get-changed-files.outputs.changed_files }}"
+        INVALID_FILES=0
+    
+        # Define allowed prefixes
+        declare -a PREFIXES=("M_" "PP_" "MF_" "MI_" "MPC_" "SP_" "PM_")
+        # Define specific prefixes that can have the optional suffix
+        declare -a DECAL_PREFIXES=("M_" "MI_")
+        # Define optional suffix for Decals
+        SUFFIX="_Decal"
+    
+        for FILE in $CHANGED_FILES; do
+          if [[ -f "$FILE" && "$FILE" == */Materials/* ]]; then
+            FILENAME=$(basename "$FILE")
+            PREFIX_VALID=0
+            DECAL_SUFFIX_PRESENT=0
+    
+            # Check if filename starts with any of the allowed prefixes
+            for PREFIX in "${PREFIXES[@]}"; do
+              if [[ "$FILENAME" == $PREFIX* ]]; then
+                PREFIX_VALID=1
+                break
+              fi
+            done
+    
+            # Check if the Decal suffix is present
+            if [[ "$FILENAME" == *"$SUFFIX" ]]; then
+              DECAL_SUFFIX_PRESENT=1
+            fi
+    
+            # Additional check for Decal files
+            if [[ $DECAL_SUFFIX_PRESENT -eq 1 ]]; then
+              # If suffix is present, ensure it's only with M_ or MI_ prefixes
+              if ! [[ "$FILENAME" =~ ^(M_|MI_).+${SUFFIX}$ ]]; then
+                PREFIX_VALID=0  # Invalidate if DECAL suffix is present with non-allowed prefixes
+              fi
+            fi
+    
+            # Validate: If prefix is valid then file is valid
+            if [[ $PREFIX_VALID -eq 1 ]]; then
+              echo -e "\033[32m✔ - $FILE\033[0m"  # Green checkmark
+            else
+              echo -e "\033[31m✘ - $FILE\033[0m"  # Red cross
+              INVALID_FILES=$((INVALID_FILES+1))
+            fi
+          fi
+        done
+    
+        if [[ $INVALID_FILES -gt 0 ]]; then
+          echo "Found $INVALID_FILES files with invalid prefixes or incorrect usage of optional suffix for Decals in Materials."
+          exit 1
+        else
+          echo "All files in Materials have valid prefixes and the correct optional suffix for Decals where applicable."
+        fi
+      shell: bash
+
+  validate-blueprints:
+    runs-on: [self-hosted]
+    needs: get-changed-files
+    steps:
+    - name: Validate Blueprint file prefixes and optional suffix for Components
+      run: |
+        echo "Validating Blueprint file prefixes and optional suffix for Components..."
+        CHANGED_FILES="${{ needs.get-changed-files.outputs.changed_files }}"
+        INVALID_FILES=0
+    
+        # Define allowed prefixes without specifying suffixes here
+        declare -a PREFIXES=("BP_" "BPFL_" "BPI_" "BPML_" "E" "F" "S" "TBP_" "WBP_")
+        # Define suffix
+        SUFFIX="_Component"
+    
+        for FILE in $CHANGED_FILES; do
+          if [[ -f "$FILE" && "$FILE" == */Blueprints/* ]]; then
+            FILENAME=$(basename "$FILE")
+            PREFIX_VALID=0
+            SUFFIX_VALID=1  # Assume suffix is valid unless proven otherwise
+    
+            # Check if filename starts with any of the allowed prefixes
+            for PREFIX in "${PREFIXES[@]}"; do
+              if [[ "$FILENAME" == $PREFIX* ]]; then
+                PREFIX_VALID=1
+                break
+              fi
+            done
+    
+            # Special handling for _Component suffix
+            if [[ "$FILENAME" == *"$SUFFIX" ]]; then
+              # If it ends with _Component, it must start with BP_ to be valid
+              if [[ "$FILENAME" =~ ^BP_.*$SUFFIX$ ]]; then
+                SUFFIX_VALID=1
+              else
+                SUFFIX_VALID=0
+              fi
+            fi
+    
+            # Validate: If prefix is valid and suffix is valid
+            if [[ $PREFIX_VALID -eq 1 && $SUFFIX_VALID -eq 1 ]]; then
+              echo -e "\033[32m✔ - $FILE\033[0m"  # Green checkmark
+            else
+              echo -e "\033[31m✘ - $FILE\033[0m"  # Red cross
+              INVALID_FILES=$((INVALID_FILES+1))
+            fi
+          fi
+        done
+    
+        if [[ $INVALID_FILES -gt 0 ]]; then
+          echo "Found $INVALID_FILES files with invalid prefixes or incorrect usage of optional suffix for Components in Blueprints."
+          exit 1
+        else
+          echo "All files in Blueprints have valid prefixes and the correct optional suffix for Components where applicable."
+        fi
+      shell: bash
+      
+  validate-static-meshes:
+    runs-on: [self-hosted]
+    needs: get-changed-files
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Validate Static Meshes file prefixes
+        run: |
+          echo "Validating Static Meshes file prefixes..."
+          CHANGED_FILES="${{ needs.get-changed-files.outputs.changed_files }}"
+          INVALID_FILES=0
+          for FILE in $CHANGED_FILES; do
+            if [[ -f "$FILE" && "$FILE" == */StaticMeshes/* ]]; then
+              FILENAME=$(basename "$FILE")
+              if [[ "$FILENAME" == S_* ]]; then
+                echo -e "\033[32m✔ - $FILE\033[0m"  # Green checkmark
+              else
+                echo -e "\033[31m✘ - $FILE\033[0m"  # Red cross
+                INVALID_FILES=$((INVALID_FILES+1))
+              fi
+            fi
+          done
+          if [[ $INVALID_FILES -gt 0 ]]; then
+            echo "Found $INVALID_FILES files with invalid prefixes in Static Meshes."
+            exit 1
+          else
+            echo "All files in Static Meshes have valid prefixes."
+          fi
+        shell: bash
+
+  validate-textures:
+    runs-on: [self-hosted]
+    needs: get-changed-files
+    steps:
+    - name: Validate Texture file prefixes and optional suffixes, T_ only
+      run: |
+        echo "Validating Texture file prefixes and optional suffixes, T_ only..."
+        CHANGED_FILES="${{ needs.get-changed-files.outputs.changed_files }}"
+        INVALID_FILES=0
+    
+        # Define the specific prefix that can have suffixes
+        PREFIX_WITH_SUFFIX="T_"
+        # Define allowed suffixes for T_ prefix
+        declare -a SUFFIXES=("_D" "_N" "_R" "_A" "_O" "_B" "_E" "_M" "_S")
+        # Define other prefixes without suffixes
+        declare -a OTHER_PREFIXES=("TC_" "MT_" "RT_" "RTC_")
+        # Special prefix without underscore
+        SPECIAL_PREFIX="TLP"
+    
+        for FILE in $CHANGED_FILES; do
+          if [[ -f "$FILE" && "$FILE" == */Textures/* ]]; then
+            FILENAME=$(basename "$FILE")
+            PREFIX_FOUND=0
+            SUFFIX_VALID=0  # Assume suffix is invalid initially, prove it's valid
+    
+            # Check for T_ prefix with optional suffixes
+            if [[ "$FILENAME" == "$PREFIX_WITH_SUFFIX"* ]]; then
+              PREFIX_FOUND=1
+              # Default to valid if no suffix is found
+              SUFFIX_VALID=1
+              # Check for valid suffix
+              for SUFFIX in "${SUFFIXES[@]}"; do
+                if [[ "$FILENAME" == *"$SUFFIX" ]]; then
+                  SUFFIX_VALID=1
+                  break  # Valid suffix found
+                fi
+              done
+            fi
+    
+            # Check for special prefix TLP without suffixes
+            if [[ "$FILENAME" == "$SPECIAL_PREFIX"* ]]; then
+              PREFIX_FOUND=1
+              SUFFIX_VALID=1  # No suffix to validate, so it's automatically valid
+            fi
+    
+            # Check for other prefixes without suffixes
+            for PREFIX in "${OTHER_PREFIXES[@]}"; do
+              if [[ "$FILENAME" == $PREFIX* ]]; then
+                PREFIX_FOUND=1
+                SUFFIX_VALID=1  # These prefixes don't use suffixes, so they're automatically valid
+                break
+              fi
+            done
+    
+            # Validate: If prefix is found and suffix (if present) is valid
+            if [[ $PREFIX_FOUND -eq 1 && $SUFFIX_VALID -eq 1 ]]; then
+              echo -e "\033[32m✔ - $FILE\033[0m"  # Green checkmark
+            else
+              echo -e "\033[31m✘ - $FILE\033[0m"  # Red cross
+              INVALID_FILES=$((INVALID_FILES+1))
+            fi
+          fi
+        done
+    
+        if [[ $INVALID_FILES -gt 0 ]]; then
+          echo "Found $INVALID_FILES files with invalid prefixes or incorrect usage of optional suffixes in Textures."
+          exit 1
+        else
+          echo "All files in Textures have valid prefixes and the correct optional suffixes where applicable."
+        fi
+      shell: bash
+
+  validate-miscellaneous:
+    runs-on: [self-hosted]
+    needs: get-changed-files
+    steps:
+    - name: Validate Miscellaneous folder files with specific prefixes and non-optional suffixes
+      run: |
+        echo "Validating files in Miscellaneous folders..."
+        CHANGED_FILES="${{ needs.get-changed-files.outputs.changed_files }}"
+        INVALID_FILES=0
+        
+        # Define prefix and their associated non-optional suffixes
+        declare -A PREFIX_SUFFIXES=(
+          ["VFA_"]=""
+          ["CA_"]=""
+          ["Curve_"]="_Color _Table _Float _Vector"
+          ["DT_"]=""
+          ["FT_"]=""
+          ["FFE_"]=""
+          ["LG_"]=""
+          ["LL_"]=""
+          ["Matinee_"]=""
+          ["MP_"]=""
+          ["FMS_"]=""
+          ["OL_"]=""
+          ["SS_"]=""
+          ["VF_"]=""
+          ["SGI_"]=""
+          ["SIF_"]=""
+          ["TI_"]=""
+        )
+        
+        # Function to check if a file matches any of the specific prefix-suffix rules
+        check_prefix_suffix() {
+          local FILENAME=$1
+          local IS_VALID=0
+          for PREFIX in "${!PREFIX_SUFFIXES[@]}"; do
+            if [[ "$FILENAME" == "$PREFIX"* ]]; then
+              local SUFFIXES=${PREFIX_SUFFIXES[$PREFIX]}
+              if [[ -z "$SUFFIXES" ]]; then  # No suffix required
+                IS_VALID=1
+                break
+              else
+                for SUFFIX in $SUFFIXES; do
+                  if [[ "$FILENAME" == *"$SUFFIX" ]]; then
+                    IS_VALID=1
+                    break 2  # Break out of both loops
+                  fi
+                done
+              fi
+            fi
+          done
+          echo $IS_VALID
+        }
+        
+        for FILE in $CHANGED_FILES; do
+          if [[ -f "$FILE" && "$FILE" == */Miscellaneous/* ]]; then
+            FILENAME=$(basename "$FILE")
+            # Check for wildcard prefix case
+            if [[ "$FILENAME" == *"_*" ]]; then
+              echo -e "\033[32m✔ - $FILE (Wildcard prefix)\033[0m"
+              continue
+            fi
+            # Check against specific prefix-suffix rules
+            if [[ $(check_prefix_suffix "$FILENAME") -eq 1 ]]; then
+              echo -e "\033[32m✔ - $FILE\033[0m"
+            else
+              echo -e "\033[31m✘ - $FILE\033[0m"
+              INVALID_FILES=$((INVALID_FILES+1))
+            fi
+          fi
+        done
+        
+        if [[ $INVALID_FILES -gt 0 ]]; then
+          echo "Found $INVALID_FILES files with invalid prefixes or missing required suffixes in Miscellaneous folders."
+          exit 1
+        else
+          echo "All files in Miscellaneous folders have valid prefixes and the required suffixes."
+        fi
+      shell: bash
+
+  validate-paper2d:
+    runs-on: [self-hosted]
+    needs: get-changed-files
+    steps:
+    - name: Validate Paper2D file prefixes
+      run: |
+        echo "Validating Paper2D file prefixes..."
+        CHANGED_FILES="${{ needs.get-changed-files.outputs.changed_files }}"
+        INVALID_FILES=0
+    
+        # Define allowed prefixes for Paper2D
+        declare -a PREFIXES=("PFB_" "SPR_" "SPRG_" "TM_" "TS_")
+    
+        for FILE in $CHANGED_FILES; do
+          if [[ -f "$FILE" && "$FILE" == */Paper2D/* ]]; then
+            FILENAME=$(basename "$FILE")
+            PREFIX_VALID=0
+    
+            # Check if filename starts with any of the allowed prefixes
+            for PREFIX in "${PREFIXES[@]}"; do
+              if [[ "$FILENAME" == $PREFIX* ]]; then
+                PREFIX_VALID=1
+                break
+              fi
+            done
+    
+            # Validate: If prefix is valid
+            if [[ $PREFIX_VALID -eq 1 ]]; then
+              echo -e "\033[32m✔ - $FILE\033[0m"  # Green checkmark
+            else
+              echo -e "\033[31m✘ - $FILE\033[0m"  # Red cross
+              INVALID_FILES=$((INVALID_FILES+1))
+            fi
+          fi
+        done
+    
+        if [[ $INVALID_FILES -gt 0 ]]; then
+          echo "Found $INVALID_FILES files with invalid prefixes in Paper2D."
+          exit 1
+        else
+          echo "All files in Paper2D have valid prefixes."
+        fi
+      shell: bash
+
+  validate-physics:
+    runs-on: [self-hosted]
+    needs: get-changed-files
+    steps:
+    - name: Validate Physics file prefixes
+      run: |
+        echo "Validating Physics file prefixes..."
+        CHANGED_FILES="${{ needs.get-changed-files.outputs.changed_files }}"
+        INVALID_FILES=0
+    
+        # Define allowed prefixes for Physics
+        declare -a PREFIXES=("PM_" "PHYS_" "DM_")
+    
+        for FILE in $CHANGED_FILES; do
+          if [[ -f "$FILE" && "$FILE" == */Physics/* ]]; then
+            FILENAME=$(basename "$FILE")
+            PREFIX_VALID=0
+    
+            # Check if filename starts with any of the allowed prefixes
+            for PREFIX in "${PREFIXES[@]}"; do
+              if [[ "$FILENAME" == $PREFIX* ]]; then
+                PREFIX_VALID=1
+                break
+              fi
+            done
+    
+            # Validate: If prefix is valid
+            if [[ $PREFIX_VALID -eq 1 ]]; then
+              echo -e "\033[32m✔ - $FILE\033[0m"  # Green checkmark
+            else
+              echo -e "\033[31m✘ - $FILE\033[0m"  # Red cross
+              INVALID_FILES=$((INVALID_FILES+1))
+            fi
+          fi
+        done
+    
+        if [[ $INVALID_FILES -gt 0 ]]; then
+          echo "Found $INVALID_FILES files with invalid prefixes in Physics."
+          exit 1
+        else
+          echo "All files in Physics have valid prefixes."
+        fi
+      shell: bash
+
+  validate-sounds:
+    runs-on: [self-hosted]
+    needs: get-changed-files
+    steps:
+      - name: Validate Sound file prefixes and optional suffixes, A_ only
+        run: |
+          echo "Validating Sound file prefixes and optional suffixes, A_ only..."
+          CHANGED_FILES="${{ needs.get-changed-files.outputs.changed_files }}"
+          INVALID_FILES=0
+
+          # Define the specific prefix that can have an optional suffix
+          PREFIX_WITH_OPTIONAL_SUFFIX="A_"
+          # Define the optional suffix for A_ prefix
+          OPTIONAL_SUFFIX="_CUE"
+          # Define other prefixes without suffixes
+          declare -a OTHER_PREFIXES=("DV_" "DW_" "MSW_" "Reverb_" "ATT_" "Mix_")
+
+          for FILE in $CHANGED_FILES; do
+            if [[ -f "$FILE" && "$FILE" == */Sounds/* ]]; then
+              FILENAME=$(basename "$FILE")
+              PREFIX_FOUND=0
+              SUFFIX_VALID=0  # Assume suffix is invalid initially, prove it's valid
+
+              # Check for A_ prefix with optional suffix
+              if [[ "$FILENAME" == "$PREFIX_WITH_OPTIONAL_SUFFIX"* ]]; then
+                PREFIX_FOUND=1
+                # Default to valid if no suffix is found or if it ends with the optional suffix
+                if [[ "$FILENAME" == *"$OPTIONAL_SUFFIX" || "$FILENAME" == "$PREFIX_WITH_OPTIONAL_SUFFIX"* ]]; then
+                  SUFFIX_VALID=1
+                fi
+              fi
+
+              # Check for other prefixes without suffixes
+              for PREFIX in "${OTHER_PREFIXES[@]}"; do
+                if [[ "$FILENAME" == $PREFIX* ]]; then
+                  PREFIX_FOUND=1
+                  SUFFIX_VALID=1  # These prefixes don't use suffixes, so they're automatically valid
+                  break
+                fi
+              done
+
+              # Validate: If prefix is found and suffix (if present) is valid
+              if [[ $PREFIX_FOUND -eq 1 && $SUFFIX_VALID -eq 1 ]]; then
+                echo -e "\033[32m✔ - $FILE\033[0m"  # Green checkmark
+              else
+                echo -e "\033[31m✘ - $FILE\033[0m"  # Red cross
+                INVALID_FILES=$((INVALID_FILES+1))
+              fi
+            fi
+          done
+
+          if [[ $INVALID_FILES -gt 0 ]]; then
+            echo "Found $INVALID_FILES files with invalid prefixes or incorrect usage of optional suffixes in Sounds."
+            exit 1
+          else
+            echo "All files in Sounds have valid prefixes and the correct optional suffixes where applicable."
+          fi
+        shell: bash
+
+  validate-user-interface:
+    runs-on: [self-hosted]
+    needs: get-changed-files
+    steps:
+      - name: Validate UserInterface file prefixes
+        run: |
+          echo "Validating UserInterface file prefixes..."
+          CHANGED_FILES="${{ needs.get-changed-files.outputs.changed_files }}"
+          INVALID_FILES=0
+      
+          # Define allowed prefixes for UserInterface
+          declare -a PREFIXES=("Font_" "Brush_" "Style_" "WBP_")
+      
+          for FILE in $CHANGED_FILES; do
+            if [[ -f "$FILE" && "$FILE" == */UserInterface/* ]]; then
+              FILENAME=$(basename "$FILE")
+              PREFIX_VALID=0
+      
+              # Check if filename starts with any of the allowed prefixes
+              for PREFIX in "${PREFIXES[@]}"; do
+                if [[ "$FILENAME" == $PREFIX* ]]; then
+                  PREFIX_VALID=1
+                  break
+                fi
+              done
+      
+              # Validate: If prefix is valid
+              if [[ $PREFIX_VALID -eq 1 ]]; then
+                echo -e "\033[32m✔ - $FILE\033[0m"  # Green checkmark
+              else
+                echo -e "\033[31m✘ - $FILE\033[0m"  # Red cross
+                INVALID_FILES=$((INVALID_FILES+1))
+              fi
+            fi
+          done
+      
+          if [[ $INVALID_FILES -gt 0 ]]; then
+            echo "Found $INVALID_FILES files with invalid prefixes in UserInterface."
+            exit 1
+          else
+            echo "All files in UserInterface have valid prefixes."
+          fi
+        shell: bash
+        
+  validate-effects:
+    runs-on: [self-hosted]
+    needs: get-changed-files
+    steps:
+    - name: Validate Effects file prefixes
+      run: |
+        echo "Validating Effects file prefixes..."
+        CHANGED_FILES="${{ needs.get-changed-files.outputs.changed_files }}"
+        INVALID_FILES=0
+    
+        # Define allowed prefixes for Effects
+        declare -a PREFIXES=("PS_" "PP_")
+    
+        for FILE in $CHANGED_FILES; do
+          if [[ -f "$FILE" && "$FILE" == */Effects/* ]]; then
+            FILENAME=$(basename "$FILE")
+            PREFIX_VALID=0
+    
+            # Check if filename starts with any of the allowed prefixes
+            for PREFIX in "${PREFIXES[@]}"; do
+              if [[ "$FILENAME" == $PREFIX* ]]; then
+                PREFIX_VALID=1
+                break
+              fi
+            done
+    
+            # Validate: If prefix is valid
+            if [[ $PREFIX_VALID -eq 1 ]]; then
+              echo -e "\033[32m✔ - $FILE\033[0m"  # Green checkmark
+            else
+              echo -e "\033[31m✘ - $FILE\033[0m"  # Red cross
+              INVALID_FILES=$((INVALID_FILES+1))
+            fi
+          fi
+        done
+    
+        if [[ $INVALID_FILES -gt 0 ]]; then
+          echo "Found $INVALID_FILES files with invalid prefixes in Effects."
+          exit 1
+        else
+          echo "All files in Effects have valid prefixes."
+        fi
+      shell: bash

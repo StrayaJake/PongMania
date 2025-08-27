@@ -1,0 +1,43 @@
+name: Project Version Check
+
+on:
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  check-version:
+    runs-on: [self-hosted]
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Get version from current branch
+      id: get_branch_version
+      run: |
+        BRANCH_VERSION=$(grep -oP '(?<=ProjectVersion=)[0-9\.]+' OnslaughtHero/Config/DefaultGame.ini)
+        echo "BRANCH_VERSION=${BRANCH_VERSION}" >> $GITHUB_ENV
+        echo "Current branch version: $BRANCH_VERSION"
+      shell: bash
+
+    - name: Get version from main branch
+      run: |
+        git fetch origin main
+        git checkout origin/main -b main_branch
+        MAIN_VERSION=$(grep -oP '(?<=ProjectVersion=)[0-9\.]+' OnslaughtHero/Config/DefaultGame.ini)
+        echo "MAIN_VERSION=${MAIN_VERSION}" >> $GITHUB_ENV
+        echo "Main branch version: $MAIN_VERSION"
+      shell: bash
+
+    - name: Check version
+      run: |
+        echo "Checking versions..."
+        echo "Main version: $MAIN_VERSION"
+        echo "Branch version: $BRANCH_VERSION"
+        if [ "$MAIN_VERSION" == "$BRANCH_VERSION" ]; then
+          echo "Version match found: $MAIN_VERSION"
+          exit 1
+        else
+          echo "No version match. Main version: $MAIN_VERSION, Branch version: $BRANCH_VERSION"
+        fi
+      shell: bash
