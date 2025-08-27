@@ -15,7 +15,7 @@ jobs:
     - name: Get version from current branch
       id: get_branch_version
       run: |
-        BRANCH_VERSION=$(grep -oP '(?<=ProjectVersion=)[0-9\.]+' OnslaughtHero/Config/DefaultGame.ini)
+        BRANCH_VERSION=$(grep -oP '(?<=ProjectVersion=)[0-9\.]+' PongMania/Config/DefaultGame.ini)
         echo "BRANCH_VERSION=${BRANCH_VERSION}" >> $GITHUB_ENV
         echo "Current branch version: $BRANCH_VERSION"
       shell: bash
@@ -24,7 +24,7 @@ jobs:
       run: |
         git fetch origin main
         git checkout origin/main -b main_branch
-        MAIN_VERSION=$(grep -oP '(?<=ProjectVersion=)[0-9\.]+' OnslaughtHero/Config/DefaultGame.ini)
+        MAIN_VERSION=$(grep -oP '(?<=ProjectVersion=)[0-9\.]+' PongMania/Config/DefaultGame.ini)
         echo "MAIN_VERSION=${MAIN_VERSION}" >> $GITHUB_ENV
         echo "Main branch version: $MAIN_VERSION"
       shell: bash
